@@ -1,5 +1,4 @@
 # C-Octree
-==============
 This is a C implementation of an AABB Octree. Simply include the header files and compile/link the c files. It uses no external libraries. Each function takes an octree to perform an operation on, and in most cases two float vectors with 3 components (vec3). The only dependency on linmath.h is the definition of vec3, so it can be easily removed. I use it in my projects because its definitions match up nicely with GLSL.
 
 Most of the code is self explanitory. Here are some tips:
