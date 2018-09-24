@@ -3,6 +3,8 @@
 Octree Octree_New(vec3 pos, int size) {
 	Octree octree = malloc(sizeof(struct Octree_Cell));
 
+	octree->parent = NULL;
+
 	// Lets store these values here so they are safe
 	octree->size = size;
 	octree->x = pos[0];
@@ -21,6 +23,8 @@ Octree Octree_New(vec3 pos, int size) {
 
 void Octree_NewChild(Octree parent, int index) {
 	Octree child = malloc(sizeof(struct Octree_Cell));
+
+	child->parent = parent;
 
 	// child size is one power of two smaller than its parent
 	child->size = parent->size - 1;
@@ -88,9 +92,22 @@ void Octree_Insert(Octree octree, vec3 pA, vec3 pB, void* data){
 }
 
 void Octree_Remove(Octree octree, vec3 pA, vec3 pB, void* data) {
-	return LinkedList_Remove(
-		Octree_GetDescendent(octree, pA, pB, NO_CREATE)->values,
-		data);
+	Octree owner = Octree_GetDescendent(octree, pA, pB, NO_CREATE);
+	LinkedList_Remove(owner->values, data);
+
+	// Check if we can remove this node, and any of its parents.
+	while (owner) {
+		if (owner->values->next)
+			return;
+
+		for (int i = 0; i < 8; i++)
+			if (owner->children[i])
+				return;
+
+		Octree child = owner;
+		owner = child->parent;
+		Octree_Free(child);
+	}
 }
 
 void Octree_Append(Octree octree, LinkedList result) {
@@ -124,6 +141,14 @@ LinkedList Octree_Intersection(Octree octree, vec3 pA, vec3 pB) {
 }
 
 void Octree_Free(Octree octree) {
+	if (octree->parent) {
+		Octree parent = octree->parent;
+		int index = ((octree->x < parent->x)<<0)
+			+ ((octree->y < parent->y)<<1)
+			+ ((octree->z < parent->z)<<2);
+		parent->children[index] = NULL;
+	}
+
 	for (int i = 0; i < 8; i++)
 		if (octree->children[i])
 			Octree_Free(octree->children[i]);

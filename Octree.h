@@ -7,6 +7,7 @@
 #define NO_CREATE 1
 
 struct Octree_Cell {
+	struct Octree_Cell* parent;
 	float x;
 	float y;
 	float z;
